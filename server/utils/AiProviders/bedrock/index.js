@@ -56,6 +56,8 @@ class AWSBedrockLLM {
     "anthropic.claude-opus-4-7",
     "anthropic.claude-opus-4-8",
     "anthropic.claude-sonnet-5",
+    "openai.gpt-5.6",
+    "openai.gpt-6",
   ];
 
   constructor(embedder = null, modelPreference = null) {
@@ -78,7 +80,7 @@ class AWSBedrockLLM {
 
     this.openai = new OpenAIApi({
       apiKey: process.env.AWS_BEDROCK_LLM_API_KEY,
-      baseURL: openaiBaseURL(this.region),
+      baseURL: openaiBaseURL(this.region, this.model),
     });
 
     if (this.model?.includes("anthropic")) {

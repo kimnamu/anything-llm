@@ -1422,6 +1422,7 @@ async function getBedrockModels(_apiKey = null, options = {}) {
     const {
       openaiBaseURL,
       controlPlaneHost,
+      isOpenAIGptModel,
     } = require("../AiProviders/bedrock/endpoints");
     const openai = new OpenAIApi({
       apiKey,
@@ -1432,8 +1433,9 @@ async function getBedrockModels(_apiKey = null, options = {}) {
     // (eg: `eu.anthropic.*`), which are the only way to run Claude in many
     // regions, and does not exist at all in some regions (eg: GovCloud East).
     // The control plane accepts the same bearer key and lists them, so both
-    // sources are merged. Only Anthropic profiles are listed since profile
-    // IDs are only routable through the bedrock-runtime `/anthropic` path.
+    // sources are merged. Only Anthropic and OpenAI GPT profiles are listed
+    // since those are the only profile IDs routed to bedrock-runtime
+    // (`/anthropic` and `/openai/v1`).
     const catalogModels = await openai.models
       .list()
       .then((results) => results.data)
@@ -1459,7 +1461,8 @@ async function getBedrockModels(_apiKey = null, options = {}) {
           .filter(
             (profile) =>
               profile.status === "ACTIVE" &&
-              profile.inferenceProfileId.includes("anthropic.")
+              (profile.inferenceProfileId.includes("anthropic.") ||
+                isOpenAIGptModel(profile.inferenceProfileId))
           )
           .map((profile) => ({
             id: profile.inferenceProfileId,

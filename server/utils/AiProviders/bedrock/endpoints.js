@@ -85,12 +85,30 @@ function controlPlaneHost(region) {
 }
 
 /**
- * OpenAI-compatible base URL for chat completions.
+ * Whether a model ID is an OpenAI GPT model (eg: `openai.gpt-6-sol`,
+ * `us.openai.gpt-5.6-luna`) other than gpt-oss. These are only served on the
+ * `/openai/v1` route - Mantle's `/v1` route rejects them with "isn't supported
+ * on this route", while gpt-oss and other vendors are only served on `/v1`.
+ * @param {string|null} modelId
+ * @returns {boolean}
+ */
+function isOpenAIGptModel(modelId = "") {
+  if (!modelId) return false;
+  return modelId.includes("openai.gpt-") && !modelId.includes("gpt-oss");
+}
+
+/**
+ * OpenAI-compatible base URL for chat completions. OpenAI GPT models use the
+ * `/openai/v1` route, with the same profile-ID split as `anthropicBaseURL`.
  * @param {string} region
+ * @param {string|null} modelId
  * @returns {string}
  */
-function openaiBaseURL(region) {
-  return `${mantleHost(region)}/v1`;
+function openaiBaseURL(region, modelId = "") {
+  if (!isOpenAIGptModel(modelId)) return `${mantleHost(region)}/v1`;
+  return isInferenceProfileId(modelId)
+    ? `${runtimeHost(region)}/openai/v1`
+    : `${mantleHost(region)}/openai/v1`;
 }
 
 /**
@@ -109,6 +127,7 @@ function anthropicBaseURL(region, modelId = "") {
 
 module.exports = {
   isInferenceProfileId,
+  isOpenAIGptModel,
   mantleHost,
   runtimeHost,
   controlPlaneHost,
