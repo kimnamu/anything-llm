@@ -67,6 +67,17 @@ class AWSBedrockProvider extends InheritMultiple([Provider, UnTooled]) {
   }
 
   /**
+   * GPT-6 Astra on Bedrock rejects function tools on chat completions at any
+   * reasoning effort ("To use function tools, use /v1/responses"), so it uses
+   * the prompt-based UnTooled path.
+   * @returns {boolean}
+   */
+  supportsNativeToolCalling() {
+    if (this.optsOutOfNativeToolCallingViaEnv(this.providerTag)) return false;
+    return !this.model?.includes("openai.gpt-6-astra");
+  }
+
+  /**
    * OpenAI GPT models on Bedrock reject function tools on chat completions
    * unless reasoning is off ("Function tools with reasoning_effort are not
    * supported ... set reasoning_effort to 'none'").

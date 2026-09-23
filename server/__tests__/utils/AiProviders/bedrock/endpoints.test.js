@@ -119,6 +119,29 @@ describe("OpenAI GPT request params", () => {
     );
   });
 
+  describe.each(["openai.gpt-6-astra", "us.openai.gpt-6-astra"])(
+    "%s",
+    (model) => {
+      it.each(chatCallSites)("%s omits temperature", async (_label, run) => {
+        const create = fakeCreate();
+        await run(model, create);
+        expect(create.mock.calls[0][0].temperature).toBeUndefined();
+      });
+
+      it.each(agentCallSites)(
+        "%s offers tools in the prompt, without tools or reasoning_effort",
+        async (_label, run) => {
+          const create = fakeCreate();
+          await run(model, create);
+          const body = create.mock.calls[0][0];
+          expect(body).not.toHaveProperty("tools");
+          expect(body).not.toHaveProperty("reasoning_effort");
+          expect(body.messages[0].content).toContain("get_weather");
+        }
+      );
+    }
+  );
+
   describe.each(["openai.gpt-oss-120b", "qwen.qwen3-32b"])("%s", (model) => {
     it.each(chatCallSites)(
       "%s keeps the default temperature",
